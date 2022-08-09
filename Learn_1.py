@@ -19,6 +19,8 @@ from pathlib import Path
 from PIL import Image
 import matplotlib.pyplot as plt
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 class NeuralNetwork(nn.Module):
   #Definition of how to make information smaller
     def __init__(self, num_classes):
@@ -57,13 +59,15 @@ class Create_Datasets(Dataset):
 
 
 def dataload():
-    lst = pd.read_csv('./Point_data.csv', header=None, dtype=int).iloc[:,0].tolist()
-    #print(lst)
+    lst_x = pd.read_csv('./Point_data.csv', header=None, dtype=int).iloc[:,0].tolist()
+    lst_y = pd.read_csv('./Point_data.csv', header=None, dtype=int).iloc[:,1].tolist()    #print(lst)
     #csvファイルのx座標とy座標の情報をリストに
     x_pos = []
     y_pos = []
-    x_pos = lst[::2]
-    y_pos = lst[1::2]
+    x_pos = lst_x
+    y_pos = lst_y
+    #x_pos = lst[::2]
+    #y_pos = lst[1::2]
     output_data = [] 
     for i in range(len(x_pos)):
         output_data.append([x_pos[i], y_pos[i]])
@@ -95,7 +99,7 @@ def train(EPOCHS,input_data, train_loader, output_data):
     test_losses = []
     test_x = []
     test_y = []
-    model = NeuralNetwork().to(device)
+    model = NeuralNetwork(10).to(device)
     criterion = nn.MSELoss()
     optimizer = optim.SGD(model.parameters(), lr=0.01)
     for epoch in range(EPOCHS):
@@ -136,7 +140,6 @@ def train(EPOCHS,input_data, train_loader, output_data):
     return test, test_x, test_y, output, val_output, record_loss_train, record_loss_test
 
 def main():
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     EPOCHS = 100
     input_data, output_data, train_loader = dataload()
     test, test_x, test_y, output, val_output, record_loss_train, record_loss_test = train(EPOCHS,input_data, train_loader, output_data) 
