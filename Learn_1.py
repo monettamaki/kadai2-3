@@ -74,10 +74,10 @@ def dataload():
     image_datas = np.concatenate(input_data,axis=0)
     image_datas = np.transpose(image_datas, (0, 3, 1, 2))
     #print(image_datas)
-    #print(input_data)
+    #print(image_datas.shape)
+    #print(output_data.shape)
     input_data = torch.FloatTensor(image_datas) 
     output_data = torch.FloatTensor(output_data)
-    #print(output_data.shape)
     dataset = TensorDataset(input_data, output_data)
     train_loader = DataLoader(dataset, batch_size=10, shuffle=True)
     return input_data, output_data, train_loader    
@@ -99,7 +99,7 @@ def train(EPOCHS,input_data, train_loader, output_data):
             model = model.to(device)
             train_input = xy[0].to(device)#image
             #print(train_input.shape) 
-            train_output = xy[1].to(device)#ここj[0]じゃないの？
+            train_output = xy[1].to(device)#ã“ã“j[0]ã˜ã‚ƒãªã„ã®ï¼Ÿ
             #print(xy[1])
             #print("train_output.shape{}".format(train_output.shape))
             optimizer.zero_grad()
@@ -115,7 +115,7 @@ def train(EPOCHS,input_data, train_loader, output_data):
     
         loss_test = 0.0
         for j, xy in enumerate(train_loader):
-            input_data.to(device) #.to(device)転送作業、CPU、GPUどっち使うか
+            input_data.to(device) #.to(device)è»¢é€ä½œæ¥­ã€CPUã€GPUã©ã£ã¡ä½¿ã†ã‹
             model = model.to(device)
             test = model(input_data).to(device) #open
             test_x.append(test[0])
