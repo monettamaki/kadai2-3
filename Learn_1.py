@@ -18,7 +18,7 @@ from torch.utils.data import TensorDataset
 from pathlib import Path
 from PIL import Image
 import matplotlib.pyplot as plt
-from sklearn import preprocessing
+#from sklearn import preprocessing
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 #device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
@@ -70,7 +70,9 @@ def dataload():
     input_data = []
     image_dir = './Image/'
     search_pattern = '*.png'
-    for image_path in glob.glob(os.path.join(image_dir,search_pattern)):
+    image_pathes = glob.glob(os.path.join(image_dir,search_pattern))
+    image_pathes.sort()
+    for image_path in image_pathes:
         # (height,width,channels)
         data = cv2.imread(image_path)
         # (1,height,width,channels)
@@ -85,6 +87,8 @@ def dataload():
     input_data = torch.FloatTensor(image_datas) 
     output_data = torch.FloatTensor(output_data)
     dataset = TensorDataset(input_data, output_data)
+    torch.utils.data.random_split(dataset, lengths)
+    #ここでtrain用とval用で分ける。
     train_loader = DataLoader(dataset, batch_size=1, shuffle=True)
     return input_data, output_data, train_loader    
 
@@ -95,7 +99,8 @@ def train(EPOCHS,input_data, train_loader, output_data):
     test_losses = []
     test_x = []
     test_y = []
-    model = NeuralNetwork(2).to(device)
+    model = NeuralNetwork(2)
+    model.to(device)
     criterion = nn.MSELoss()
     optimizer = optim.SGD(model.parameters(), lr=0.01)
     for epoch in range(EPOCHS):
@@ -117,9 +122,12 @@ def train(EPOCHS,input_data, train_loader, output_data):
         record_loss_train.append(loss_train)
         record_epoch_train.append(epoch)
         
+        model.eval()#更新しないから勾配いらない
         loss_test = 0.0
-        '''for j, xy in enumerate(train_loader):
+        for j, xy in enumerate(train_loader):
+        #ここのtrain_loaderをval_loaderに変える
             test_input = xy[0].to(device)#image
+            print(test_input.shape)
             test_output = xy[1].to(device)
             test = model(test_input)
             test_x.append(test[:,0])
@@ -128,7 +136,7 @@ def train(EPOCHS,input_data, train_loader, output_data):
             val_loss = criterion(test, test_output)
             loss_test += val_loss.item()
         loss_test /= j+1
-        record_loss_test.append(loss_test) '''   
+        record_loss_test.append(loss_test)
         if epoch%1 == 0:
             print("epoch: {}, loss: {},  " \
             "val_epoch: {}, val_loss: {},loss_train: {}".format(epoch, loss_train, epoch, loss_test,loss_train))
