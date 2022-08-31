@@ -24,13 +24,16 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 #device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
 class NeuralNetwork(nn.Module):
-  #Definition of how to make information smaller
+  #Definition of how to make information smaller    
     def __init__(self, num_classes):
-        super(NeuralNetwork, self).__init__()
+        super(NeuralNetwork, self).__init__()        
         self.features = nn.Sequential(
-            nn.Conv2d(in_channels=3, out_channels=8, kernel_size=5, padding=2),
+            nn.Conv2d(in_channels=3, out_channels=4, kernel_size=5, padding=2),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=2),#filter
+            nn.Conv2d(in_channels=4, out_channels=8, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=2),
             nn.Conv2d(in_channels=8, out_channels=16, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=2),
@@ -39,14 +42,16 @@ class NeuralNetwork(nn.Module):
             nn.MaxPool2d(kernel_size=2),
             nn.Conv2d(in_channels=64, out_channels=32, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=2),
+            nn.Conv2d(in_channels=32, out_channels=8, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
         )
-        #Definition of how to classify
-        self.classifier = nn.Linear(in_features=240000, out_features=num_classes)
+        self.classifier = nn.Linear(in_features=3600, out_features=num_classes)
     def forward(self, x):
         x = self.features(x) #small
         x = x.view(x.size(0), -1)
         x = self.classifier(x) #Classification
-        x = torch.nn.functional.hardsigmoid(x) 
+        x = torch.nn.functional.hardsigmoid(x)
         return x
 
 def dataload():
@@ -113,7 +118,7 @@ def train(EPOCHS,input_data, train_loader, output_data):
         record_epoch_train.append(epoch)
         
         loss_test = 0.0
-        for j, xy in enumerate(train_loader):
+        '''for j, xy in enumerate(train_loader):
             test_input = xy[0].to(device)#image
             test_output = xy[1].to(device)
             test = model(test_input)
@@ -123,7 +128,7 @@ def train(EPOCHS,input_data, train_loader, output_data):
             val_loss = criterion(test, test_output)
             loss_test += val_loss.item()
         loss_test /= j+1
-        record_loss_test.append(loss_test)    
+        record_loss_test.append(loss_test) '''   
         if epoch%1 == 0:
             print("epoch: {}, loss: {},  " \
             "val_epoch: {}, val_loss: {},loss_train: {}".format(epoch, loss_train, epoch, loss_test,loss_train))
