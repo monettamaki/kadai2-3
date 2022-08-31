@@ -21,6 +21,7 @@ import matplotlib.pyplot as plt
 from sklearn import preprocessing
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+#device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
 class NeuralNetwork(nn.Module):
   #Definition of how to make information smaller
@@ -79,7 +80,7 @@ def dataload():
     input_data = torch.FloatTensor(image_datas) 
     output_data = torch.FloatTensor(output_data)
     dataset = TensorDataset(input_data, output_data)
-    train_loader = DataLoader(dataset, batch_size=10, shuffle=True)
+    train_loader = DataLoader(dataset, batch_size=1, shuffle=True)
     return input_data, output_data, train_loader    
 
 def train(EPOCHS,input_data, train_loader, output_data):
@@ -96,15 +97,13 @@ def train(EPOCHS,input_data, train_loader, output_data):
         model.train()
         loss_train = 0
         for j, xy in enumerate(train_loader):
-            model = model.to(device)
             train_input = xy[0].to(device)#image
-            #print(train_input.shape) 
-            train_output = xy[1].to(device)#ã“ã“j[0]ã˜ã‚ƒãªã„ã®ï¼Ÿ
-            #print(xy[1])
+            #train_output = xy[1].to(device)
+            train_output = xy[1].to(device)
             #print("train_output.shape{}".format(train_output.shape))
             optimizer.zero_grad()
             output = model(train_input)#point
-            print("output{}".format(output))
+            #print("output{}".format(output))
             loss = criterion(output, train_output)
             loss_train += loss.item()
             loss.backward()
@@ -112,18 +111,16 @@ def train(EPOCHS,input_data, train_loader, output_data):
         loss_train /= j+1
         record_loss_train.append(loss_train)
         record_epoch_train.append(epoch)
-    
+        
         loss_test = 0.0
         for j, xy in enumerate(train_loader):
-            input_data.to(device) #.to(device)è»¢é€ä½œæ¥­ã€CPUã€GPUã©ã£ã¡ä½¿ã†ã‹
-            model = model.to(device)
-            test = model(input_data).to(device) #open
-            test_x.append(test[0])
-            test_y.append(test[1])
-            test_input = xy[0].to(device)
+            test_input = xy[0].to(device)#image
             test_output = xy[1].to(device)
-            val_output = model(test_input)
-            val_loss = criterion(model(test_input), test_output)
+            test = model(test_input)
+            test_x.append(test[:,0])
+            test_y.append(test[:,1])
+            #val_loss = criterion(model(test_input), test_output)
+            val_loss = criterion(test, test_output)
             loss_test += val_loss.item()
         loss_test /= j+1
         record_loss_test.append(loss_test)    
