@@ -130,13 +130,14 @@ def train(EPOCHS,input_data, train_loader, val_loader, output_data):
         model.eval()#更新しないから勾配いらない
         loss_test = 0.0
         for j, xy in enumerate(val_loader):
-            print("j{}".format(j))
-            print("xy{}".format(xy))
+            #print("j{}".format(j))
+            #print("xy{}".format(xy))
             test_input = xy[0].to(device)#image
             test_output = xy[1].to(device)
             test = model(test_input)
-            defe = test_output - test
-            print(defe)
+            defe = (test_output - test).to('cpu')
+            print(defe.device)
+            #print(defe)
             #test_x.append(test[:,0])
             #test_y.append(test[:,1])
             #val_loss = criterion(model(test_input), test_output)
