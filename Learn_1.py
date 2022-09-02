@@ -162,16 +162,6 @@ def main():
     different[:,0] = different[:,0]*800
     different[:,1] = different[:,1]*600
     print(different)
-    #for i in range(len(different_x[0])):
-        #different_xy.append([different_x[i], different_y[i]])
-    #print(different_xy[0].size())
-    #different_xy = np.array(different_xy)
-    #print("different_xy:{}".format(different_xy.shape))
-    #print(different_xy)
-    #test = test.detach().numpy()
-    #plt.plot(test_x, test_y, linestyle="None", linewidth=0, marker='o')
-    #plt.show()
-    #plt.style.use('ggplot')
     plt.plot(record_loss_train, label='train loss')
     plt.plot(record_loss_test, label='validation loss')
     plt.legend()
