@@ -103,7 +103,7 @@ def train(EPOCHS,input_data, train_loader, val_loader, output_data):
     test_losses = []
     test_x = []
     test_y = []
-    deferent = []
+    different = []
     model = NeuralNetwork(2)
     model.to(device)
     criterion = nn.MSELoss()
@@ -135,36 +135,40 @@ def train(EPOCHS,input_data, train_loader, val_loader, output_data):
             test_input = xy[0].to(device)#image
             test_output = xy[1].to(device)
             test = model(test_input)
-            defe = (test_output - test).to('cpu')
-            print(defe.device)
+            diff = test_output - test
+            diff = diff.detach().to('cpu')
+            #print(diff.device)
             #print(defe)
             #test_x.append(test[:,0])
             #test_y.append(test[:,1])
             #val_loss = criterion(model(test_input), test_output)
             val_loss = criterion(test, test_output)
             loss_test += val_loss.item()
-            deferent.append(defe)
+            different.append(diff)
         loss_test /= j+1
         record_loss_test.append(loss_test)
         if epoch%1 == 0:
             print("epoch: {}, loss: {},val_loss: {},loss_train: {}".format(epoch, loss_train, loss_test,loss_train))      
-    return test, output, record_loss_train, record_loss_test, deferent #test_x, test_y
-
+    return test, output, record_loss_train, record_loss_test, different #test_x, test_y
+    
 def main():
-    EPOCHS = 10
+    EPOCHS = 100
     input_data, output_data, train_loader,val_loader = dataload()
-    test, output, record_loss_train, record_loss_test, deferent = train(EPOCHS,input_data, train_loader, val_loader, output_data)
-    deferent_x = []
-    deferent_y = []
-    deferent_x.append(deferent[:,0])
-    deferent_y.append(deferent[:,1])
-    deferent_x = [n*800 for n in deferent_x]
-    deferent_y = [n*600 for n in deferent_y]
-    deferent_xy = [] 
-    for i in range(len(deferent_x)):
-        deferent_xy.append([deferent_x[i], deferent_y[i]])
-    print(deferent_xy)
-    test = test.detach().numpy()
+    test, output, record_loss_train, record_loss_test, different = train(EPOCHS,input_data, train_loader, val_loader, output_data)
+    #print(len(different))
+    different = torch.cat(different,0)
+    #print(different)
+    #print(different[:,0])
+    different[:,0] = different[:,0]*800
+    different[:,1] = different[:,1]*600
+    print(different)
+    #for i in range(len(different_x[0])):
+        #different_xy.append([different_x[i], different_y[i]])
+    #print(different_xy[0].size())
+    #different_xy = np.array(different_xy)
+    #print("different_xy:{}".format(different_xy.shape))
+    #print(different_xy)
+    #test = test.detach().numpy()
     #plt.plot(test_x, test_y, linestyle="None", linewidth=0, marker='o')
     #plt.show()
     #plt.style.use('ggplot')
