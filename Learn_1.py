@@ -87,18 +87,23 @@ def dataload():
     input_data = torch.FloatTensor(image_datas) 
     output_data = torch.FloatTensor(output_data)
     dataset = TensorDataset(input_data, output_data)
-    torch.utils.data.random_split(dataset, lengths)
-    #ここでtrain用とval用で分ける。
-    train_loader = DataLoader(dataset, batch_size=1, shuffle=True)
-    return input_data, output_data, train_loader    
+    #train用とval用で分ける。
+    train_size = int(0.9 * len(dataset))
+    val_size = len(dataset) - train_size
+    train_dataset, val_dataset = torch.utils.data.random_split(dataset, [train_size, val_size])
+    train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=1, shuffle=True)
+    #print("val_dataset{}".format(val_dataset))
+    return input_data, output_data, train_loader, val_loader
 
-def train(EPOCHS,input_data, train_loader, output_data):
+def train(EPOCHS,input_data, train_loader, val_loader, output_data):
     record_loss_train = []
     record_epoch_train = []
     record_loss_test = []
     test_losses = []
     test_x = []
     test_y = []
+    deferent = []
     model = NeuralNetwork(2)
     model.to(device)
     criterion = nn.MSELoss()
@@ -121,36 +126,47 @@ def train(EPOCHS,input_data, train_loader, output_data):
         loss_train /= j+1
         record_loss_train.append(loss_train)
         record_epoch_train.append(epoch)
-        
+                
         model.eval()#更新しないから勾配いらない
         loss_test = 0.0
-        for j, xy in enumerate(train_loader):
-        #ここのtrain_loaderをval_loaderに変える
+        for j, xy in enumerate(val_loader):
+            print("j{}".format(j))
+            print("xy{}".format(xy))
             test_input = xy[0].to(device)#image
-            print(test_input.shape)
             test_output = xy[1].to(device)
             test = model(test_input)
-            test_x.append(test[:,0])
-            test_y.append(test[:,1])
+            defe = test_output - test
+            print(defe)
+            #test_x.append(test[:,0])
+            #test_y.append(test[:,1])
             #val_loss = criterion(model(test_input), test_output)
             val_loss = criterion(test, test_output)
             loss_test += val_loss.item()
+            deferent.append(defe)
         loss_test /= j+1
         record_loss_test.append(loss_test)
         if epoch%1 == 0:
-            print("epoch: {}, loss: {},  " \
-            "val_epoch: {}, val_loss: {},loss_train: {}".format(epoch, loss_train, epoch, loss_test,loss_train))
-
-    return test, test_x, test_y, output, val_output, record_loss_train, record_loss_test
+            print("epoch: {}, loss: {},val_loss: {},loss_train: {}".format(epoch, loss_train, loss_test,loss_train))      
+    return test, output, record_loss_train, record_loss_test, deferent #test_x, test_y
 
 def main():
-    EPOCHS = 100
-    input_data, output_data, train_loader = dataload()
-    test, test_x, test_y, output, val_output, record_loss_train, record_loss_test = train(EPOCHS,input_data, train_loader, output_data) 
+    EPOCHS = 10
+    input_data, output_data, train_loader,val_loader = dataload()
+    test, output, record_loss_train, record_loss_test, deferent = train(EPOCHS,input_data, train_loader, val_loader, output_data)
+    deferent_x = []
+    deferent_y = []
+    deferent_x.append(deferent[:,0])
+    deferent_y.append(deferent[:,1])
+    deferent_x = [n*800 for n in deferent_x]
+    deferent_y = [n*600 for n in deferent_y]
+    deferent_xy = [] 
+    for i in range(len(deferent_x)):
+        deferent_xy.append([deferent_x[i], deferent_y[i]])
+    print(deferent_xy)
     test = test.detach().numpy()
-    plt.plot(test_x, test_y, linestyle="None", linewidth=0, marker='o')
-    plt.show()
-    plt.style.use('ggplot')
+    #plt.plot(test_x, test_y, linestyle="None", linewidth=0, marker='o')
+    #plt.show()
+    #plt.style.use('ggplot')
     plt.plot(record_loss_train, label='train loss')
     plt.plot(record_loss_test, label='validation loss')
     plt.legend()
