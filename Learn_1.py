@@ -33,25 +33,25 @@ class NeuralNetwork(nn.Module):
             nn.MaxPool2d(kernel_size=2),#filter
             nn.Conv2d(in_channels=4, out_channels=8, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=2),
+            #nn.MaxPool2d(kernel_size=2),
             nn.Conv2d(in_channels=8, out_channels=16, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=2),
+            #nn.MaxPool2d(kernel_size=2),
             nn.Conv2d(in_channels=16, out_channels=64, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=2),
+            #nn.MaxPool2d(kernel_size=2),
             nn.Conv2d(in_channels=64, out_channels=32, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
-            nn.MaxPool2d(kernel_size=2),
+            #nn.MaxPool2d(kernel_size=2),
             nn.Conv2d(in_channels=32, out_channels=8, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
         )
-        self.classifier = nn.Linear(in_features=3600, out_features=num_classes)
+        self.classifier = nn.Linear(in_features=960000, out_features=num_classes)
     def forward(self, x):
         x = self.features(x) #small
         x = x.view(x.size(0), -1)
         x = self.classifier(x) #Classification
-        x = torch.nn.functional.hardsigmoid(x)
+        x = torch.nn.functional.rrelu(x)
         return x
 
 def dataload():
@@ -91,8 +91,8 @@ def dataload():
     train_size = int(0.9 * len(dataset))
     val_size = len(dataset) - train_size
     train_dataset, val_dataset = torch.utils.data.random_split(dataset, [train_size, val_size])
-    train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=1, shuffle=True)
+    train_loader = DataLoader(train_dataset, batch_size=10, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=10, shuffle=True)
     #print("val_dataset{}".format(val_dataset))
     return input_data, output_data, train_loader, val_loader
 
@@ -107,7 +107,7 @@ def train(EPOCHS,input_data, train_loader, val_loader, output_data):
     model = NeuralNetwork(2)
     model.to(device)
     criterion = nn.MSELoss()
-    optimizer = optim.SGD(model.parameters(), lr=0.01)
+    optimizer = optim.SGD(model.parameters(), lr=0.001)
     for epoch in range(EPOCHS):
         model.train()
         loss_train = 0
@@ -152,7 +152,7 @@ def train(EPOCHS,input_data, train_loader, val_loader, output_data):
     return test, output, record_loss_train, record_loss_test, different #test_x, test_y
     
 def main():
-    EPOCHS = 100
+    EPOCHS = 1000
     input_data, output_data, train_loader,val_loader = dataload()
     test, output, record_loss_train, record_loss_test, different = train(EPOCHS,input_data, train_loader, val_loader, output_data)
     #print(len(different))
